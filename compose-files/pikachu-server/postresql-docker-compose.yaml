@@ -1,0 +1,40 @@
+---
+services:
+
+#==========
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASS}
+    volumes:
+        - ${POSTGRES_PATH}/configs/postgres/data:/var/lib/postgresql/data
+    ports:
+        - 5432:5432
+    networks:
+        - postgres-db-network
+    restart: unless-stopped
+
+#----------
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+        PGADMIN_DEFAULT_EMAIL: '${PGADMIN_EMAIL}'
+        PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_PASS}'
+    ports:
+        - 8081:80
+    volumes:
+        - "${POSTGRES_PATH}/configs/pgadmin/pgadmin:/var/lib/pgadmin"
+    networks:
+        - postgres-db-network
+    restart: unless-stopped
+
+#----------
+
+networks:
+  postgres-db-network:
+      driver: bridge

@@ -1,0 +1,45 @@
+---
+services:
+
+#==========
+
+  maria_db:
+    image: mariadb:11
+    container_name: mariadb_db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASS}
+    volumes:
+      - ${SQL_PATH}/configs/mysql:/var/lib/mysql
+    networks:
+      - db_network
+    ports:
+      - '3306:3306'
+    restart: unless-stopped
+
+#----------
+
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: phpmyadmin_ui
+    restart: unless-stopped
+    environment:
+      PMA_HOST: maria_db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      UPLOAD_LIMIT: 1G
+    ports:
+      - '8082:80'
+    networks:
+      - db_network
+    depends_on:
+      - maria_db
+    restart: unless-stopped
+
+#==========
+
+networks:
+  db_network:
+    driver: bridge

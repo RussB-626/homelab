@@ -1,0 +1,193 @@
+---
+services:
+
+#==========
+
+  maria_db:
+    image: mariadb:11
+    container_name: mariadb_db
+    hostname: mysql
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASS}
+    volumes:
+      - ${CONFIGS_PATH}/mysql:/var/lib/mysql
+    networks:
+      - stack-network
+    ports:
+      - '3306:3306'
+    restart: unless-stopped
+
+#----------
+
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: phpmyadmin_ui
+    environment:
+      PMA_HOST: maria_db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      UPLOAD_LIMIT: 1G
+    ports:
+      - '8082:80'
+    networks:
+      - stack-network
+    depends_on:
+      - maria_db
+    restart: unless-stopped
+
+#----------
+
+  semaphore:
+    image: semaphoreui/semaphore:latest
+    container_name: semaphore
+    networks:
+      - stack-network
+    ports:
+      - 3000:3000
+    environment:
+      ANSIBLE_HOST_KEY_CHECKING: false
+      SEMAPHORE_DB_HOST: mysql
+      SEMAPHORE_DB_USER: root
+      SEMAPHORE_DB_PASS: ${DB_ROOT_PASS}
+      SEMAPHORE_DB_DIALECT: mysql
+      SEMAPHORE_DB_PORT: 3306
+      SEMAPHORE_DB: semaphore
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+      SEMAPHORE_ADMIN: ${SEM_USER}
+      SEMAPHORE_ADMIN_EMAIL: ${EMAIL}
+      SEMAPHORE_ADMIN_NAME: ${SEM_USER}
+      SEMAPHORE_ADMIN_PASSWORD: ${SEM_ADM_PASS}
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: ${SEM_ACC_KEY}
+      SEMAPHORE_LDAP_ACTIVATED: no # if you wish to use ldap, set to: 'yes' 
+      SEMAPHORE_LDAP_HOST: dc01.local.example.com
+      SEMAPHORE_LDAP_PORT: "636"
+      SEMAPHORE_LDAP_NEEDTLS: yes
+      SEMAPHORE_LDAP_DN_BIND: uid=bind_user,cn=users,cn=accounts,dc=local,dc=shiftsystems,dc=net
+      SEMAPHORE_LDAP_PASSWORD: ldap_bind_account_password
+      SEMAPHORE_LDAP_DN_SEARCH: dc=local,dc=example,dc=com
+      SEMAPHORE_LDAP_SEARCH_FILTER: (&(uid=%s)(memberOf=cn=ipausers,cn=groups,cn=accounts,dc=local,dc=example,dc=com))
+    volumes:
+      - ${CONFIGS_PATH}/semaphore/requirements.txt:/etc/semaphore/requirements.txt
+    depends_on:
+      - maria_db
+    restart: unless-stopped
+
+#==========
+
+  626wb-cf-ddns:
+    container_name: 626wb-cf-ddns
+    image: oznu/cloudflare-ddns:latest
+    environment:
+      API_KEY: ${CLDFLR_KEY}
+      ZONE: ${CLDFLR_626WB_ZONE}
+      PROXIED: ${CLDFLR_626WB_PROX}
+    networks:
+      - stack-network
+    restart: unless-stopped
+
+#==========
+
+  codesculpter-cf-ddns:
+    container_name: codesculpter-cf-ddns
+    image: oznu/cloudflare-ddns:latest
+    environment:
+      API_KEY: ${CLDFLR_KEY}
+      ZONE: ${CLDFLR_CODESCULPTER_ZONE}
+      PROXIED: ${CLDFLR_CODESCULPTER_PROX}
+    networks:
+      - stack-network
+    restart: unless-stopped
+
+#==========
+
+  omada-controller:
+    container_name: omada
+    image: mbentley/omada-controller:5.15
+    networks:
+      omada-network:
+        ipv4_address: ${OMADA_STATIC}
+    ports:
+      - 8088:8088
+      - 8043:8043
+      - 8843:8843
+      - 27001:27001/udp
+      - 29810:29810/udp
+      - 29811-29816:29811-29816
+    environment:
+      PUID: 1000
+      PGID: 1000
+      MANAGE_HTTP_PORT: 8088
+      MANAGE_HTTPS_PORT: 8043
+      PORTAL_HTTP_PORT: 8088
+      PORTAL_HTTPS_PORT: 8843
+      PORT_ADOPT_V1: 29812
+      PORT_APP_DISCOVERY: 27001
+      PORT_DISCOVERY: 29810
+      PORT_MANAGER_V1: 29811
+      PORT_MANAGER_V2: 29814
+      PORT_TRANSFER_V2: 29815
+      PORT_RTTY: 29816
+      PORT_UPGRADE_V1: 29813
+      SHOW_SERVER_LOGS: true
+      SHOW_MONGODB_LOGS: false
+      SSL_CERT_NAME: "tls.crt"
+      SSL_KEY_NAME: "tls.key"
+      TZ: America/New_York
+    volumes:
+      - "${CONFIGS_PATH}/omada/data:/opt/tplink/EAPController/data"
+      - "${CONFIGS_PATH}/omada/logs:/opt/tplink/EAPController/logs"
+    restart: unless-stopped
+
+#==========
+
+  filebrowser:
+    container_name: filebrowser
+    image: filebrowser/filebrowser
+    ports:
+      - 8081:80
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: America/New_York
+    volumes:
+      - "/mnt/servers:/srv"
+      - "${CONFIGS_PATH}/filebrowser/database.db:/database.db"
+      - "${CONFIGS_PATH}/filebrowser/settings.json:/settings.json"
+    restart: unless-stopped
+
+#==========
+
+  kuma:
+    container_name: kuma
+    image: louislam/uptime-kuma:1
+    ports:
+      - 3001:3001
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: America/New_York
+    volumes:
+      - "${CONFIGS_PATH}/kuma/data:/app/data"
+    restart: unless-stopped
+
+#==========
+
+networks:
+
+  stack-network:
+    name: stack-network
+    driver: bridge
+
+#----------
+
+  omada-network:
+    name: omada-network
+    driver: macvlan
+    driver_opts:
+      parent: ${OMADA_PARENT}
+    ipam:
+      config:
+        - subnet: ${OMADA_SUBNET}
+          gateway: ${OMADA_GATEWAY}

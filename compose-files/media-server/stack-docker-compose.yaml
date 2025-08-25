@@ -1,0 +1,177 @@
+---
+services:
+
+#==========
+
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 3000:3000     # firefox
+      - 3001:3001     # firefox
+      - 8080:8080     # sabnzbd
+      - 8888:8888/tcp # HTTP proxy
+      - 8388:8388/tcp # Shadowsocks
+      - 8388:8388/udp # Shadowsocks
+    volumes:
+      - "${CONFIGS_PATH}/gluetun:/gluetun"
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - DNS=${DNS}
+      - SERVER_HOSTNAMES=${SERVER_HOSTNAMES}
+      - SERVER_REGIONS=${SERVER_REGIONS}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - SERVER_CITIES=${SERVER_CITIES}
+    restart: unless-stopped
+
+#----------
+
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/sabnzbd:/config"
+      - "${SERVER_PATH}/data/usenet:/data/usenet"
+    # ports:
+    #   - 8080:8080
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: unless-stopped
+
+#----------
+
+  firefox:
+    image: lscr.io/linuxserver/firefox:latest
+    container_name: firefox
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/firefox:/config"
+    # ports:
+      # - 3000:3000
+      # - 3001:3001
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: unless-stopped
+
+#==========
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/prowlarr:/config"
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+#----------
+
+  notifiarr:
+    image: golift/notifiarr
+    container_name: notifiarr
+    hostname: notifiarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/notifiarr:/config"
+      - "/var/run/utmp:/var/run/utmp"
+    ports:
+      - 5454:5454
+    restart: unless-stopped
+
+#----------
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/radarr:/config"
+      - "${SERVER_PATH}/data:/data"
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+#----------
+
+  radarr-anime:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr-anime
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/radarr-anime:/config"
+      - "${SERVER_PATH}/data:/data"
+    ports:
+      - 7879:7878
+    restart: unless-stopped
+
+#----------
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/sonarr:/config"
+      - "${SERVER_PATH}/data:/data"
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+#----------
+
+  sonarr-anime:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr-anime
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "${CONFIGS_PATH}/sonarr-anime:/config"
+      - "${SERVER_PATH}/data:/data"
+    ports:
+      - 8990:8989
+    restart: unless-stopped
