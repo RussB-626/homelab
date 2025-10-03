@@ -53,6 +53,7 @@
 
 - sudo mount <nas_ip>:/mnt/HDDs/servers/controller /mnt/controller
 - sudo mount <nas_ip>:/mnt/HDDs/servers /mnt/servers
+- sudo mount <nas_ip>:/mnt/HDDs/MediaServer /mnt/MediaServer
 
 ### Setup Auto Mount Share On Reboot
 
@@ -62,6 +63,7 @@
 ```text
 <nas_ip>:/mnt/HDDs/servers/controller /mnt/controller nfs defaults 0 0
 <nas_ip>:/mnt/HDDs/servers /mnt/servers nfs defaults 0 0
+<nas_ip>:/mnt/HDDs/MediaServer /mnt/MediaServer nfs defaults 0 0
 ```
 
 ## Local Directories
@@ -69,6 +71,7 @@
 - /mnt
   - /controller
   - /servers
+  - /MediaServer
 
 ## NFS Directories Setup
 
