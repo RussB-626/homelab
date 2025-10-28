@@ -142,23 +142,6 @@ services:
 
 #==========
 
-  filebrowser:
-    container_name: filebrowser
-    image: filebrowser/filebrowser
-    ports:
-      - 8081:80
-    environment:
-      PUID: 1000
-      PGID: 1000
-      TZ: America/New_York
-    volumes:
-      - "/mnt/servers:/srv"
-      - "${CONFIGS_PATH}/filebrowser/database.db:/database.db"
-      - "${CONFIGS_PATH}/filebrowser/settings.json:/settings.json"
-    restart: unless-stopped
-
-#==========
-
   kuma:
     container_name: kuma
     image: louislam/uptime-kuma:1
