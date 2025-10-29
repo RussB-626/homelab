@@ -9,6 +9,11 @@
 - Change ubuntu sources:
     - sudo nano /etc/apt/sources.list.d/ubuntu.sources
 
+- Issues with update and upgrade:
+    - sudo apt clean
+    - sudo apt update
+    - sudo apt upgrade
+
 - Change Directory/File Ownership
   - sudo chown -R $USER /path/to/folder
 
@@ -19,7 +24,7 @@
   - mv /home/user/oldname /home/user/newname
 
 
-Default Sources File:
+Default Sources File - /etc/apt/sources.list.d/ubuntu.sources:
 ```text
 Types: deb
 URIs: http://us.archive.ubuntu.com/ubuntu/
