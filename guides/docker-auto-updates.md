@@ -8,7 +8,7 @@ We use a script instead of putting the command directly in the cron table becaus
 2. **Create the file**:
 
 ```
-nano ~/update-docker.sh
+nano /home/your-username/update-docker.sh
 ```
 
    
@@ -44,7 +44,7 @@ echo "--- Update Finished: $(date) ---"
 5. **Make it Executable**:
 
 ```
-chmod +x ~/update-docker.sh
+chmod +x /home/your-username/update-docker.sh
 ```
 
 ---
