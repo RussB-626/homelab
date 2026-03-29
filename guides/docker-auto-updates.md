@@ -4,7 +4,7 @@
 
 We use a script instead of putting the command directly in the cron table because it’s easier to debug and allows for multiple commands (pull, up, prune) to run in sequence.
 
-1. **Open a terminal** via SSH to 172.16.10.2.  
+1. **Open a terminal** via SSH to server.  
 2. **Create the file**:
 
 ```
