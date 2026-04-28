@@ -32,26 +32,14 @@
 ## Local Directories
 
 - /mnt
-  - /eevee
+  - /pikachu
 
 ## NFS Directories Setup
 
-- /mnt/eevee
+- /mnt/pikachu
   - /docker
-    - /mysql
+    - /database
       - .env
       - docker-compose.yaml
-      - /configs
-        - /mysql
-    - /portainer
-      - .env
-      - docker-compose.yaml
-      - /data
-    - /postgres
-      - .env
-      - docker-compose.yaml
-      - /configs
-        - /pgadmin
-          - /pgadmin
-        - /postgres
-          - /data
+      - /mysql
+
